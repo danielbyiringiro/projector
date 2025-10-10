@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Scripture & Song Projector</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .container {
+                background: white;
+                border-radius: 20px;
+                padding: 40px;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+                width: 90%;
+                max-width: 800px;
+            }
+
+            h1 {
+                text-align: center;
+                color: #333;
+                margin-bottom: 40px;
+                font-size: 2.5rem;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .content-type-selector {
+                margin-bottom: 30px;
+            }
+
+            label {
+                display: block;
+                margin-bottom: 10px;
+                font-weight: 600;
+                color: #555;
+                font-size: 1.1rem;
+            }
+
+            select,
+            input {
+                width: 100%;
+                padding: 15px;
+                border: 2px solid #ddd;
+                border-radius: 10px;
+                font-size: 1rem;
+                background: #f8f9fa;
+                transition: all 0.3s ease;
+            }
+
+            select:focus,
+            input:focus {
+                outline: none;
+                border-color: #667eea;
+                box-shadow: 0 0 10px rgba(102, 126, 234, 0.2);
+            }
+
+            .form-group {
+                margin-bottom: 25px;
+            }
+
+            .verse-inputs {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr 2fr;
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+
+            button {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                padding: 15px 30px;
+                border-radius: 10px;
+                font-size: 1.1rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                width: 100%;
+            }
+
+            button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            }
+
+            button:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+            .hidden {
+                display: none !important;
+            }
+
+            .projection-window {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: #000;
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                font-family: Arial, sans-serif;
+            }
+
+            .projection-content {
+                text-align: center;
+                max-width: 90%;
+                padding: 40px;
+            }
+
+            .projection-title {
+                font-size: 3rem;
+                margin-bottom: 40px;
+                color: #ffd700;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            }
+
+            .projection-text {
+                font-size: 2.5rem;
+                line-height: 1.6;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+                white-space: pre-line;
+            }
+
+            .projection-verse-info {
+                font-size: 2rem;
+                margin-top: 30px;
+                color: #ffd700;
+                font-style: italic;
+            }
+
+            .controls {
+                display: flex;
+                gap: 15px;
+                margin-top: 30px;
+            }
+
+            .controls button {
+                flex: 1;
+            }
+
+            .nav-button {
+                background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            }
+
+            .nav-button:hover {
+                box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+            }
+
+            .close-button {
+                background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            }
+
+            .close-button:hover {
+                box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+            }
+
+            .current-position {
+                text-align: center;
+                margin-top: 20px;
+                font-weight: 600;
+                color: #666;
+            }
+
+            @media (max-width: 768px) {
+                .container {
+                    width: 95%;
+                    padding: 20px;
+                }
+
+                h1 {
+                    font-size: 2rem;
+                }
+
+                .verse-inputs {
+                    grid-template-columns: 1fr;
+                }
+
+                .projection-title {
+                    font-size: 2rem;
+                }
+
+                .projection-text {
+                    font-size: 1.8rem;
+                }
+
+                .controls {
+                    flex-direction: column;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>📖 Scripture & Song Projector</h1>
+
+            <div class="form-group content-type-selector">
+                <label for="contentType">Choose Content Type:</label>
+                <select id="contentType">
+                    <option value="">-- Select Content Type --</option>
+                    <option value="song">Song</option>
+                    <option value="verse">Bible Verse</option>
+                </select>
+            </div>
+
+            <!-- Song Selection -->
+            <div id="songSection" class="hidden">
+                <div class="form-group">
+                    <label for="songNumber">Song Number:</label>
+                    <input
+                        type="number"
+                        id="songNumber"
+                        min="1"
+                        placeholder="Enter song number"
+                    />
+                </div>
+                <button id="loadSong">Load Song</button>
+            </div>
+
+            <!-- Bible Verse Selection -->
+            <div id="verseSection" class="hidden">
+                <div class="form-group">
+                    <label for="bibleVersion">Bible Version:</label>
+                    <select id="bibleVersion">
+                        <option value="kjv">King James Version (KJV)</option>
+                        <option value="niv">
+                            New International Version (NIV)
+                        </option>
+                        <option value="esv">
+                            English Standard Version (ESV)
+                        </option>
+                        <option value="nkjv">
+                            New King James Version (NKJV)
+                        </option>
+                    </select>
+                </div>
+
+                <div class="verse-inputs">
+                    <div>
+                        <label for="bookName">Book:</label>
+                        <select id="bookName">
+                            <option value="">-- Select Book --</option>
+                            <!-- Old Testament -->
+                            <optgroup label="Old Testament">
+                                <option value="Genesis">Genesis</option>
+                                <option value="Exodus">Exodus</option>
+                                <option value="Leviticus">Leviticus</option>
+                                <option value="Numbers">Numbers</option>
+                                <option value="Deuteronomy">Deuteronomy</option>
+                                <option value="Joshua">Joshua</option>
+                                <option value="Judges">Judges</option>
+                                <option value="Ruth">Ruth</option>
+                                <option value="1 Samuel">1 Samuel</option>
+                                <option value="2 Samuel">2 Samuel</option>
+                                <option value="1 Kings">1 Kings</option>
+                                <option value="2 Kings">2 Kings</option>
+                                <option value="1 Chronicles">
+                                    1 Chronicles
+                                </option>
+                                <option value="2 Chronicles">
+                                    2 Chronicles
+                                </option>
+                                <option value="Ezra">Ezra</option>
+                                <option value="Nehemiah">Nehemiah</option>
+                                <option value="Esther">Esther</option>
+                                <option value="Job">Job</option>
+                                <option value="Psalms">Psalms</option>
+                                <option value="Proverbs">Proverbs</option>
+                                <option value="Ecclesiastes">
+                                    Ecclesiastes
+                                </option>
+                                <option value="Song of Solomon">
+                                    Song of Solomon
+                                </option>
+                                <option value="Isaiah">Isaiah</option>
+                                <option value="Jeremiah">Jeremiah</option>
+                                <option value="Lamentations">
+                                    Lamentations
+                                </option>
+                                <option value="Ezekiel">Ezekiel</option>
+                                <option value="Daniel">Daniel</option>
+                                <option value="Hosea">Hosea</option>
+                                <option value="Joel">Joel</option>
+                                <option value="Amos">Amos</option>
+                                <option value="Obadiah">Obadiah</option>
+                                <option value="Jonah">Jonah</option>
+                                <option value="Micah">Micah</option>
+                                <option value="Nahum">Nahum</option>
+                                <option value="Habakkuk">Habakkuk</option>
+                                <option value="Zephaniah">Zephaniah</option>
+                                <option value="Haggai">Haggai</option>
+                                <option value="Zechariah">Zechariah</option>
+                                <option value="Malachi">Malachi</option>
+                            </optgroup>
+                            <!-- New Testament -->
+                            <optgroup label="New Testament">
+                                <option value="Matthew">Matthew</option>
+                                <option value="Mark">Mark</option>
+                                <option value="Luke">Luke</option>
+                                <option value="John">John</option>
+                                <option value="Acts">Acts</option>
+                                <option value="Romans">Romans</option>
+                                <option value="1 Corinthians">
+                                    1 Corinthians
+                                </option>
+                                <option value="2 Corinthians">
+                                    2 Corinthians
+                                </option>
+                                <option value="Galatians">Galatians</option>
+                                <option value="Ephesians">Ephesians</option>
+                                <option value="Philippians">Philippians</option>
+                                <option value="Colossians">Colossians</option>
+                                <option value="1 Thessalonians">
+                                    1 Thessalonians
+                                </option>
+                                <option value="2 Thessalonians">
+                                    2 Thessalonians
+                                </option>
+                                <option value="1 Timothy">1 Timothy</option>
+                                <option value="2 Timothy">2 Timothy</option>
+                                <option value="Titus">Titus</option>
+                                <option value="Philemon">Philemon</option>
+                                <option value="Hebrews">Hebrews</option>
+                                <option value="James">James</option>
+                                <option value="1 Peter">1 Peter</option>
+                                <option value="2 Peter">2 Peter</option>
+                                <option value="1 John">1 John</option>
+                                <option value="2 John">2 John</option>
+                                <option value="3 John">3 John</option>
+                                <option value="Jude">Jude</option>
+                                <option value="Revelation">Revelation</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="chapter">Chapter:</label>
+                        <input
+                            type="number"
+                            id="chapter"
+                            min="1"
+                            placeholder="Chapter"
+                        />
+                    </div>
+
+                    <div>
+                        <label for="startVerse">Start Verse:</label>
+                        <input
+                            type="number"
+                            id="startVerse"
+                            min="1"
+                            placeholder="Start"
+                        />
+                    </div>
+
+                    <div>
+                        <label for="endVerse">End Verse (optional):</label>
+                        <input
+                            type="number"
+                            id="endVerse"
+                            min="1"
+                            placeholder="End"
+                        />
+                    </div>
+                </div>
+
+                <button id="loadVerse">Load Bible Passage</button>
+            </div>
+
+            <!-- Controls (shown when content is loaded) -->
+            <div id="controls" class="controls hidden">
+                <button id="prevButton" class="nav-button">⬅️ Previous</button>
+                <button id="startProjection">🖥️ Start Projection</button>
+                <button id="nextButton" class="nav-button">Next ➡️</button>
+            </div>
+
+            <div id="currentPosition" class="current-position hidden"></div>
+        </div>
+
+        <!-- Projection Window (hidden by default) -->
+        <div id="projectionWindow" class="projection-window hidden">
+            <div class="projection-content">
+                <div id="projectionTitle" class="projection-title"></div>
+                <div id="projectionText" class="projection-text"></div>
+                <div
+                    id="projectionVerseInfo"
+                    class="projection-verse-info"
+                ></div>
+            </div>
+        </div>
+
+        <script src="bible-api.js"></script>
+        <script src="script.js"></script>
+    </body>
+</html>
