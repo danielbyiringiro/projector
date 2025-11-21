@@ -20,6 +20,9 @@ let currentContent = {
   mainTitle: "", // Overall title (e.g., "Hymn #123" or "Scripture Reading")
 };
 
+// Projection theme state
+let projectionTheme = 'dark'; // 'dark' or 'light'
+
 // DOM Elements
 const elements = {
   tabs: document.querySelectorAll(".tab-btn"),
@@ -39,6 +42,8 @@ const elements = {
   statusBadge: document.getElementById("connectionStatus"),
   prevBtn: document.getElementById("prevButton"),
   nextBtn: document.getElementById("nextButton"),
+  darkThemeBtn: document.getElementById("darkThemeBtn"),
+  lightThemeBtn: document.getElementById("lightThemeBtn"),
   inputs: {
     song: document.getElementById("songNumber"),
     version: document.getElementById("bibleVersion"),
@@ -121,6 +126,7 @@ function init() {
   populateBooks();
   setupEventListeners();
   loadLocalData();
+  loadThemePreference();
 }
 
 // --- UI Setup ---
@@ -153,6 +159,10 @@ function setupEventListeners() {
   // Navigation buttons
   elements.prevBtn.addEventListener("click", () => navigateContent(-1));
   elements.nextBtn.addEventListener("click", () => navigateContent(1));
+
+  // Theme toggle buttons
+  elements.darkThemeBtn.addEventListener("click", () => setProjectionTheme('dark'));
+  elements.lightThemeBtn.addEventListener("click", () => setProjectionTheme('light'));
 
   // Keyboard shortcuts
   document.addEventListener("keydown", (e) => {
@@ -268,6 +278,32 @@ async function loadVerse() {
 }
 
 
+// --- Theme Management ---
+
+function setProjectionTheme(theme) {
+  projectionTheme = theme;
+
+  // Update button states
+  elements.darkThemeBtn.classList.toggle('active', theme === 'dark');
+  elements.lightThemeBtn.classList.toggle('active', theme === 'light');
+
+  // Update projection window if it's open
+  if (theme === 'light') {
+    elements.projectionWindow.classList.add('light-theme');
+  } else {
+    elements.projectionWindow.classList.remove('light-theme');
+  }
+
+  // Save preference to localStorage
+  localStorage.setItem('projectionTheme', theme);
+}
+
+// Load saved theme preference
+function loadThemePreference() {
+  const savedTheme = localStorage.getItem('projectionTheme') || 'dark';
+  setProjectionTheme(savedTheme);
+}
+
 // --- Navigation ---
 
 function navigateContent(direction) {
@@ -322,6 +358,14 @@ function openProjection() {
   }
 
   elements.projectionWindow.classList.remove("hidden");
+
+  // Apply current theme
+  if (projectionTheme === 'light') {
+    elements.projectionWindow.classList.add('light-theme');
+  } else {
+    elements.projectionWindow.classList.remove('light-theme');
+  }
+
   updateProjection();
 
   // Try to enter fullscreen

@@ -299,6 +299,57 @@ select:focus {
   gap: 1rem;
 }
 
+/* Theme Toggle */
+.theme-toggle-container {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--card-border);
+}
+
+.theme-toggle-label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.theme-toggle-buttons {
+  display: flex;
+  gap: 0.5rem;
+  background: var(--input-bg);
+  padding: 0.25rem;
+  border-radius: 8px;
+}
+
+.theme-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.theme-btn.active {
+  background: var(--bg-color);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.theme-btn:hover:not(.active) {
+  color: var(--text-primary);
+}
+
 /* Footer */
 .app-footer {
   margin-top: auto;
@@ -321,6 +372,33 @@ select:focus {
   align-items: center;
   justify-content: center;
   padding: 4rem;
+  transition: background 0.3s ease;
+}
+
+/* Light Theme for Projection */
+.projection-overlay.light-theme {
+  background: white;
+}
+
+.projection-overlay.light-theme .projection-title {
+  color: #999;
+}
+
+.projection-overlay.light-theme .projection-text {
+  color: #000;
+}
+
+.projection-overlay.light-theme .projection-citation {
+  color: #666;
+}
+
+.projection-overlay.light-theme .close-projection-btn {
+  color: #ccc;
+}
+
+.projection-overlay.light-theme .close-projection-btn:hover {
+  background: #f0f0f0;
+  color: #000;
 }
 
 .close-projection-btn {
@@ -353,6 +431,7 @@ select:focus {
   color: #666;
   margin-bottom: 2rem;
   font-weight: 300;
+  transition: color 0.3s ease;
 }
 
 .projection-text {
@@ -362,12 +441,14 @@ select:focus {
   line-height: 1.3;
   margin-bottom: 2rem;
   white-space: pre-wrap;
+  transition: color 0.3s ease;
 }
 
 .projection-citation {
   font-size: 2vw;
   color: #888;
   font-style: italic;
+  transition: color 0.3s ease;
 }
 
 /* Responsive */
