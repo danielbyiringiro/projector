@@ -12,12 +12,12 @@ const BIBLE_BOOKS = {
 let BIBLE_DATA = {};
 let SONG_DATA = {};
 
-// State
+// State - Changed to support navigation through multiple items
 let currentContent = {
   type: null, // 'song' or 'verse'
-  title: "",
-  text: "",
-  citation: "",
+  items: [], // Array of {title, text, citation} objects
+  currentIndex: 0,
+  mainTitle: "", // Overall title (e.g., "Hymn #123" or "Scripture Reading")
 };
 
 // DOM Elements
@@ -37,6 +37,8 @@ const elements = {
   projText: document.getElementById("projectionText"),
   projInfo: document.getElementById("projectionVerseInfo"),
   statusBadge: document.getElementById("connectionStatus"),
+  prevBtn: document.getElementById("prevButton"),
+  nextBtn: document.getElementById("nextButton"),
   inputs: {
     song: document.getElementById("songNumber"),
     version: document.getElementById("bibleVersion"),
@@ -87,12 +89,26 @@ function parseSps(text) {
       const title = parts[1] || "Unknown Title";
       let lyrics = parts[6] || "";
 
-      // Clean up lyrics
-      lyrics = lyrics.replace(/@\$/g, "\n\n").replace(/@%/g, "\n").trim();
-      // Remove verse markers like 'Verse 1' or 'Refrain'
-      lyrics = lyrics.replace(/^(Verse \d+|Refrain)\n/gm, '');
+      // Parse into stanzas for navigation
+      const stanzas = [];
+      const stanzaParts = lyrics.split("@$");
 
-      songs[number] = { title, lyrics };
+      for (const stanzaPart of stanzaParts) {
+        if (stanzaPart.trim()) {
+          const stanzaLines = stanzaPart.split("@%");
+          const stanzaTitle = stanzaLines[0].trim();
+          const stanzaText = stanzaLines.slice(1).join("\n").trim();
+
+          if (stanzaText) {
+            stanzas.push({
+              title: stanzaTitle,
+              text: stanzaText
+            });
+          }
+        }
+      }
+
+      songs[number] = { title, stanzas };
     }
   }
   return songs;
@@ -134,9 +150,28 @@ function setupEventListeners() {
   elements.startProjectionBtn.addEventListener("click", openProjection);
   elements.closeProjectionBtn.addEventListener("click", closeProjection);
 
+  // Navigation buttons
+  elements.prevBtn.addEventListener("click", () => navigateContent(-1));
+  elements.nextBtn.addEventListener("click", () => navigateContent(1));
+
+  // Keyboard shortcuts
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !elements.projectionWindow.classList.contains("hidden")) {
       closeProjection();
+    } else if (e.key === "ArrowLeft") {
+      navigateContent(-1);
+    } else if (e.key === "ArrowRight") {
+      navigateContent(1);
+    } else if (e.key === " " && currentContent.items.length > 0) {
+      e.preventDefault();
+      toggleProjection();
+    }
+  });
+
+  // Enter key in song number field
+  elements.inputs.song.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      loadSong();
     }
   });
 }
@@ -149,6 +184,14 @@ function switchTab(tabId) {
     content.classList.toggle("active", content.id === `${tabId}Section`);
   });
   elements.previewSection.classList.add("hidden");
+
+  // Reset content when switching tabs
+  currentContent = {
+    type: null,
+    items: [],
+    currentIndex: 0,
+    mainTitle: "",
+  };
 }
 
 // --- Content Loading Logic ---
@@ -160,13 +203,19 @@ function loadSong() {
   const song = SONG_DATA[number];
 
   if (song) {
+    // Convert stanzas to navigable items
     currentContent = {
       type: "song",
-      title: `Hymn #${number}`,
-      text: song.lyrics,
-      citation: song.title,
+      mainTitle: `Hymn #${number}`,
+      items: song.stanzas.map(stanza => ({
+        title: `${song.title} - ${stanza.title}`,
+        text: stanza.text,
+        citation: `Hymn #${number} - ${song.title}`,
+      })),
+      currentIndex: 0,
     };
     updatePreview();
+    updateNavigationButtons();
   } else {
     alert(`Song #${number} not found.`);
   }
@@ -181,7 +230,7 @@ async function loadVerse() {
   if (!book || !chapter || !startVerse) {
     return alert("Please fill in Book, Chapter, and Start Verse.");
   }
-  
+
   elements.loadVerseBtn.textContent = "Loading...";
   elements.loadVerseBtn.disabled = true;
 
@@ -191,49 +240,125 @@ async function loadVerse() {
     citation += `-${endVerse}`;
   }
 
+  // Create individual verse items for navigation
   for (let i = startVerse; i <= endVerse; i++) {
     const key = `${book} ${chapter}:${i}`;
     const verseText = BIBLE_DATA[key];
-    if (verseText) {
-      // Remove any leading '#' characters from the verse text
-      verses.push(verseText.replace(/^#\s*/, ''));
-    } else {
-      verses.push(`[${book} ${chapter}:${i} not found]`);
-    }
+    const cleanText = verseText ? verseText.replace(/^#\s*/, '') : `[${key} not found]`;
+
+    verses.push({
+      title: `${book} ${chapter}:${i}`,
+      text: cleanText,
+      citation: `${book} ${chapter}:${i} (KJV)`,
+    });
   }
 
   currentContent = {
     type: "verse",
-    title: "Scripture Reading",
-    text: verses.join("\n"),
-    citation: `${citation} (KJV)`, // Assuming KJV from the filename
+    mainTitle: "Scripture Reading",
+    items: verses,
+    currentIndex: 0,
   };
-  
+
   updatePreview();
+  updateNavigationButtons();
 
   elements.loadVerseBtn.textContent = "Load Passage";
   elements.loadVerseBtn.disabled = false;
 }
 
 
+// --- Navigation ---
+
+function navigateContent(direction) {
+  if (currentContent.items.length === 0) return;
+
+  const newIndex = currentContent.currentIndex + direction;
+
+  if (newIndex >= 0 && newIndex < currentContent.items.length) {
+    currentContent.currentIndex = newIndex;
+    updatePreview();
+    updateNavigationButtons();
+    updateProjection();
+  }
+}
+
+function updateNavigationButtons() {
+  if (currentContent.items.length === 0) {
+    elements.prevBtn.disabled = true;
+    elements.nextBtn.disabled = true;
+    return;
+  }
+
+  elements.prevBtn.disabled = currentContent.currentIndex === 0;
+  elements.nextBtn.disabled = currentContent.currentIndex === currentContent.items.length - 1;
+}
+
 // --- UI Update & Projection ---
 
 function updatePreview() {
-  elements.previewMeta.textContent = currentContent.citation;
-  elements.previewText.textContent = currentContent.text;
+  if (currentContent.items.length === 0) return;
+
+  const currentItem = currentContent.items[currentContent.currentIndex];
+  const position = `${currentContent.currentIndex + 1} of ${currentContent.items.length}`;
+
+  elements.previewMeta.textContent = `${position} - ${currentItem.citation}`;
+  elements.previewText.textContent = currentItem.text;
   elements.previewSection.classList.remove("hidden");
 }
 
+function toggleProjection() {
+  if (elements.projectionWindow.classList.contains("hidden")) {
+    openProjection();
+  } else {
+    closeProjection();
+  }
+}
+
 function openProjection() {
-  elements.projTitle.textContent = currentContent.title;
-  elements.projText.textContent = currentContent.text;
-  elements.projInfo.textContent = currentContent.citation;
+  if (currentContent.items.length === 0) {
+    alert("Please load some content first!");
+    return;
+  }
+
   elements.projectionWindow.classList.remove("hidden");
+  updateProjection();
+
+  // Try to enter fullscreen
+  if (elements.projectionWindow.requestFullscreen) {
+    elements.projectionWindow.requestFullscreen().catch(err => {
+      console.log("Fullscreen request failed:", err);
+    });
+  }
+}
+
+function updateProjection() {
+  if (currentContent.items.length === 0) return;
+
+  const currentItem = currentContent.items[currentContent.currentIndex];
+
+  elements.projTitle.textContent = currentItem.title;
+  elements.projText.textContent = currentItem.text;
+  elements.projInfo.textContent = currentItem.citation;
 }
 
 function closeProjection() {
   elements.projectionWindow.classList.add("hidden");
+
+  // Exit fullscreen if active
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  }
 }
 
 // Run Init
 init();
+
+// Log keyboard shortcuts
+console.log(`
+🎵 Scripture & Song Projector - Keyboard Shortcuts:
+- Arrow Left/Right: Navigate between verses/stanzas
+- Spacebar: Toggle projection on/off
+- Escape: Close projection
+- Enter (in song number field): Load song
+`);

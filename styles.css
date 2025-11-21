@@ -287,6 +287,9 @@ select:focus {
   margin-bottom: 1.5rem;
   font-size: 1.125rem;
   min-height: 100px;
+  max-height: 250px;
+  overflow-y: auto;
+  white-space: pre-wrap;
   color: var(--text-primary);
   border: 1px solid var(--card-border);
 }
@@ -341,6 +344,8 @@ select:focus {
 .projection-inner {
   text-align: center;
   max-width: 90%;
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 .projection-title {
