@@ -100,14 +100,14 @@ function parseJsonHymnal(hymnalArray) {
   return songs;
 }
 
-// Parse verse reference like "John 3:16" or "John 3:16-18"
+// Parse verse reference like "John 3", "John 3:16" or "John 3:16-18"
 function parseVerseReference(reference) {
   // Trim whitespace
   reference = reference.trim();
 
-  // Match pattern: Book Chapter:Verse or Book Chapter:Verse-Verse
-  // Examples: "John 3:16", "1 John 3:16", "John 3:16-18"
-  const pattern = /^((?:\d\s)?[A-Za-z\s]+)\s+(\d+):(\d+)(?:-(\d+))?$/;
+  // Match pattern: Book Chapter or Book Chapter:Verse or Book Chapter:Verse-Verse
+  // Examples: "John 3", "John 3:16", "1 John 3:16", "John 3:16-18"
+  const pattern = /^((?:\d\s)?[A-Za-z\s]+)\s+(\d+)(?::(\d+)(?:-(\d+))?)?$/;
   const match = reference.match(pattern);
 
   if (!match) {
@@ -116,7 +116,7 @@ function parseVerseReference(reference) {
 
   const book = match[1].trim();
   const chapter = match[2];
-  const startVerse = parseInt(match[3], 10);
+  const startVerse = match[3] ? parseInt(match[3], 10) : null;
   const endVerse = match[4] ? parseInt(match[4], 10) : startVerse;
 
   return {
@@ -250,13 +250,30 @@ async function loadVerse() {
   const parsed = parseVerseReference(searchInput);
 
   if (!parsed) {
-    return alert("Invalid verse format. Please use format like 'John 3:16' or 'John 3:16-18'");
+    return alert("Invalid verse format. Please use format like 'John 3', 'John 3:16', or 'John 3:16-18'");
   }
 
-  const { book, chapter, startVerse, endVerse } = parsed;
+  let { book, chapter, startVerse, endVerse } = parsed;
 
   elements.loadVerseBtn.textContent = "Loading...";
   elements.loadVerseBtn.disabled = true;
+
+  // If no verse specified, load entire chapter
+  if (startVerse === null) {
+    // Find all verses in this chapter by scanning BIBLE_DATA
+    let verseNum = 1;
+    while (BIBLE_DATA[`${book} ${chapter}:${verseNum}`]) {
+      verseNum++;
+    }
+    startVerse = 1;
+    endVerse = verseNum - 1;
+
+    if (endVerse < 1) {
+      elements.loadVerseBtn.textContent = "Load Passage";
+      elements.loadVerseBtn.disabled = false;
+      return alert(`Chapter not found: ${book} ${chapter}`);
+    }
+  }
 
   const verses = [];
   let citation = `${book} ${chapter}:${startVerse}`;
@@ -282,6 +299,8 @@ async function loadVerse() {
     mainTitle: "Scripture Reading",
     items: verses,
     currentIndex: 0,
+    book: book,
+    chapter: parseInt(chapter, 10),
   };
 
   updatePreview();
@@ -325,12 +344,75 @@ function navigateContent(direction) {
 
   const newIndex = currentContent.currentIndex + direction;
 
+  // Normal navigation within loaded items
   if (newIndex >= 0 && newIndex < currentContent.items.length) {
     currentContent.currentIndex = newIndex;
     updatePreview();
     updateNavigationButtons();
     updateProjection();
+    return;
   }
+
+  // For verses, try to load next/previous verse beyond current range
+  if (currentContent.type === "verse" && currentContent.book && currentContent.chapter) {
+    if (direction === 1 && newIndex >= currentContent.items.length) {
+      // Try to load next verse
+      loadAdjacentVerse("next");
+    } else if (direction === -1 && newIndex < 0) {
+      // Try to load previous verse
+      loadAdjacentVerse("previous");
+    }
+  }
+}
+
+function loadAdjacentVerse(direction) {
+  const currentItem = currentContent.items[currentContent.currentIndex];
+  if (!currentItem || !currentItem.title) return;
+
+  // Parse current verse reference (e.g., "John 3:16")
+  const match = currentItem.title.match(/^(.+)\s+(\d+):(\d+)$/);
+  if (!match) return;
+
+  const book = match[1];
+  const chapter = parseInt(match[2], 10);
+  let verseNum = parseInt(match[3], 10);
+
+  // Calculate next or previous verse
+  if (direction === "next") {
+    verseNum++;
+  } else {
+    verseNum--;
+    if (verseNum < 1) return; // Can't go before verse 1
+  }
+
+  // Try to load the verse
+  const key = `${book} ${chapter}:${verseNum}`;
+  const verseText = BIBLE_DATA[key];
+
+  if (!verseText) {
+    // Verse doesn't exist (end of chapter or invalid)
+    return;
+  }
+
+  const cleanText = verseText.replace(/^#\s*/, '');
+  const newVerse = {
+    title: key,
+    text: cleanText,
+    citation: `${key} (KJV)`,
+  };
+
+  // Add the verse to the items array
+  if (direction === "next") {
+    currentContent.items.push(newVerse);
+    currentContent.currentIndex++;
+  } else {
+    currentContent.items.unshift(newVerse);
+    // currentIndex stays the same since we inserted at the beginning
+  }
+
+  updatePreview();
+  updateNavigationButtons();
+  updateProjection();
 }
 
 function updateNavigationButtons() {
@@ -340,8 +422,45 @@ function updateNavigationButtons() {
     return;
   }
 
-  elements.prevBtn.disabled = currentContent.currentIndex === 0;
-  elements.nextBtn.disabled = currentContent.currentIndex === currentContent.items.length - 1;
+  // For verses, check if we can load adjacent verses
+  if (currentContent.type === "verse") {
+    // Check if we can go to previous verse
+    if (currentContent.currentIndex === 0) {
+      // Check if there's a verse before the first loaded verse
+      const firstItem = currentContent.items[0];
+      const match = firstItem.title.match(/^(.+)\s+(\d+):(\d+)$/);
+      if (match) {
+        const verseNum = parseInt(match[3], 10);
+        elements.prevBtn.disabled = verseNum <= 1; // Disable if at verse 1
+      } else {
+        elements.prevBtn.disabled = true;
+      }
+    } else {
+      elements.prevBtn.disabled = false;
+    }
+
+    // Check if we can go to next verse
+    if (currentContent.currentIndex === currentContent.items.length - 1) {
+      // Check if there's a verse after the last loaded verse
+      const lastItem = currentContent.items[currentContent.items.length - 1];
+      const match = lastItem.title.match(/^(.+)\s+(\d+):(\d+)$/);
+      if (match) {
+        const book = match[1];
+        const chapter = parseInt(match[2], 10);
+        const verseNum = parseInt(match[3], 10);
+        const nextKey = `${book} ${chapter}:${verseNum + 1}`;
+        elements.nextBtn.disabled = !BIBLE_DATA[nextKey]; // Disable if next verse doesn't exist
+      } else {
+        elements.nextBtn.disabled = true;
+      }
+    } else {
+      elements.nextBtn.disabled = false;
+    }
+  } else {
+    // For songs, use normal boundary checking
+    elements.prevBtn.disabled = currentContent.currentIndex === 0;
+    elements.nextBtn.disabled = currentContent.currentIndex === currentContent.items.length - 1;
+  }
 }
 
 // --- UI Update & Projection ---
