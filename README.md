@@ -6,8 +6,8 @@ A modern, web-based projection system for displaying hymns and Bible verses, des
 
 1. **Open** `index.html` in your browser
 2. **Wait** for "Ready" status (top right)
-3. **Load** a verse (e.g., John 3:16) or hymn (e.g., #1)
-4. **Navigate** with arrow keys (← →)
+3. **Type** a verse reference (e.g., "John 3:16" or "John 3") or hymn number (e.g., #1)
+4. **Navigate** with arrow keys (← →) - verses load dynamically as you navigate!
 5. **Choose** Dark or Light theme
 6. **Project** to full screen
 
@@ -18,8 +18,13 @@ That's it! No installation, no internet required.
 ### 📖 Bible Verse Projection
 - **Complete Bible**: Full King James Version (KJV 1769) with 31,104 verses
 - **100% Offline**: No internet connection required - all verses stored locally
-- Choose any book of the Bible from organized dropdown menu (Old & New Testament)
-- Specify chapter and verse ranges
+- **Smart Search Bar**: Type natural verse references like "John 3:16" or "Psalms 23"
+- **Flexible Input Formats**:
+  - Full chapters: `John 3` (loads all 36 verses)
+  - Single verses: `John 3:16`
+  - Verse ranges: `John 3:16-18`
+  - Books with numbers: `1 John 3:16`
+- **Infinite Navigation**: Navigate beyond loaded verses - next/previous verses load automatically
 - **Navigate verse-by-verse** with arrow keys or buttons
 - Real-time position indicator (e.g., "1 of 5 - John 3:16")
 - Instant verse loading from local JSON database
@@ -67,16 +72,50 @@ That's it! No installation, no internet required.
 3. Wait for "Ready" status indicator (top right)
 
 #### Projecting Bible Verses
+
+**NEW: Smart Search Bar Interface**
+
+The Scripture Projector now features an intuitive search bar that accepts natural verse references. Simply type and go!
+
+**Supported Formats:**
+
+1. **Full Chapter** - Load entire chapters
+   - Type: `John 3` or `Psalms 23` or `Genesis 1`
+   - Result: Loads all verses in that chapter
+   - Example: `John 3` loads verses 1-36
+
+2. **Single Verse** - Load a specific verse
+   - Type: `John 3:16` or `Romans 8:28`
+   - Result: Loads that single verse
+   - Navigate to adjacent verses using arrow keys
+
+3. **Verse Range** - Load multiple consecutive verses
+   - Type: `John 3:16-18` or `Psalms 23:1-6`
+   - Result: Loads verses 16, 17, and 18
+   - Navigate through the range with arrow keys
+
+4. **Books with Numbers** - Works with numbered books
+   - Type: `1 John 3:16` or `2 Corinthians 5:17`
+   - Result: Correctly identifies the book and loads the verse
+
+**How to Use:**
+
 1. Click the **"Scripture"** tab
-2. Select the book from the dropdown menu (organized by Old/New Testament)
-3. Enter the chapter number
-4. Enter the starting verse number
-5. Optionally enter an ending verse number for a range
-6. Click **"Load Passage"**
-7. Use **arrow keys** or navigation buttons to move between verses
-8. See current position (e.g., "1 of 5 - John 3:16 (KJV)")
-9. Choose **Dark** or **Light** projection theme
-10. Click **"Project to Screen"** to enter full-screen mode
+2. Type your verse reference in the search bar (e.g., `John 3:16`)
+3. Press **Enter** or click **"Load Passage"**
+4. Use **arrow keys** (← →) or navigation buttons to move between verses
+5. **Navigate beyond loaded verses** - the system automatically loads the next/previous verse as you navigate!
+6. See current position (e.g., "1 of 5 - John 3:16 (KJV)")
+7. Choose **Dark** or **Light** projection theme
+8. Click **"Project to Screen"** to enter full-screen mode
+
+**Dynamic Verse Loading:**
+
+When you load a single verse or range, you can now navigate infinitely:
+- Load `John 3:16` → Press **Next** → Automatically loads John 3:17 → Press **Next** → Loads John 3:18, etc.
+- Press **Previous** to go backwards through verses
+- Navigation stops at verse 1 (can't go before) and at the last verse of the chapter
+- No need to reload - verses appear instantly as you navigate!
 
 #### Projecting Hymns
 1. Click the **"Song"** tab
@@ -89,10 +128,11 @@ That's it! No installation, no internet required.
 
 ## Keyboard Shortcuts
 
-- **← Left Arrow**: Navigate to previous verse/stanza
-- **→ Right Arrow**: Navigate to next verse/stanza
+- **← Left Arrow**: Navigate to previous verse/stanza (verses load dynamically)
+- **→ Right Arrow**: Navigate to next verse/stanza (verses load dynamically)
 - **Spacebar**: Toggle projection on/off (when content is loaded)
 - **Escape**: Exit projection mode
+- **Enter** (in verse search field): Load the specified verse/chapter
 - **Enter** (in song number field): Load the specified song
 
 ## Projection Themes
@@ -128,6 +168,49 @@ GNASSprojector/
 ├── sdah.json          # Hymnal database file (685 hymns)
 └── README.md          # This documentation file
 ```
+
+## Verse Search Examples
+
+Here are some practical examples to help you get started with the new search bar:
+
+### Loading Full Chapters
+Perfect for reading entire passages or chapters during services:
+- `Genesis 1` - The creation story (31 verses)
+- `Psalms 23` - The Shepherd's Psalm (6 verses)
+- `John 3` - Jesus and Nicodemus (36 verses)
+- `Matthew 5` - The Sermon on the Mount (48 verses)
+- `1 Corinthians 13` - The love chapter (13 verses)
+
+### Loading Single Verses
+Great for displaying key verses or memory verses:
+- `John 3:16` - The most famous verse
+- `Romans 8:28` - All things work together for good
+- `Philippians 4:13` - I can do all things through Christ
+- `Jeremiah 29:11` - Plans to prosper you
+- `Proverbs 3:5` - Trust in the Lord
+
+### Loading Verse Ranges
+Ideal for reading connected passages:
+- `John 3:16-17` - God's love and salvation
+- `Psalms 23:1-3` - The Lord is my shepherd
+- `Matthew 28:18-20` - The Great Commission
+- `Romans 12:1-2` - Living sacrifices
+- `Ephesians 6:10-18` - The armor of God
+
+### Navigating Through Verses
+Once you load any verse, you can navigate infinitely:
+1. Load `John 3:16`
+2. Press **→** (right arrow) to see John 3:17
+3. Keep pressing **→** to continue through John 3:18, 3:19, 3:20...
+4. Press **←** (left arrow) to go back
+5. Navigation automatically stops at chapter boundaries
+
+### Tips for Best Results
+- **Exact book names**: Use "Song of Solomon" not "Song of Songs"
+- **Numbered books**: Include the number: "1 John" not "John 1"
+- **Chapter only**: Just type book and chapter for the whole chapter
+- **Press Enter**: Hit Enter after typing to load quickly
+- **Case insensitive**: "john 3:16" works just as well as "John 3:16"
 
 ## Bible Verse Database
 
@@ -209,7 +292,15 @@ The sdah.json file contains **685 hymns** from the Seventh-day Adventist Hymnal,
 ### Navigation Not Working
 - Ensure content is loaded before using arrow keys
 - Check that navigation buttons are not disabled (grayed out)
-- Verify you're at the correct position (can't go before first or after last item)
+- For verses: Navigation automatically loads adjacent verses - if disabled, you're at a chapter boundary
+- For songs: Can't navigate beyond the loaded stanzas
+
+### Verse Search Not Working
+- Check your verse reference format (e.g., "John 3:16" not "John 3 16")
+- Ensure book name is spelled correctly (use exact Bible book names)
+- For numbered books, include the number: "1 John" not "John 1"
+- Wait for "Ready" status before searching
+- Try a simple reference like "John 3:16" to test
 
 ### Theme Not Saving
 - Check that browser allows localStorage
@@ -253,8 +344,17 @@ The sdah.json file contains **685 hymns** from the Seventh-day Adventist Hymnal,
 ### Navigation System
 - **State Management**: `currentContent` object tracks items and index
 - **Item Structure**: Each verse/stanza is a separate navigable item
+- **Dynamic Loading**: Adjacent verses load automatically when navigating beyond current range
+- **Smart Boundaries**: Navigation buttons intelligently enable/disable based on verse availability
 - **Keyboard Events**: Global event listeners for arrow keys and shortcuts
-- **Button States**: Automatic enable/disable based on position
+- **Button States**: Automatic enable/disable based on position and verse existence
+
+### Verse Search Parser
+- **Regex Pattern Matching**: Parses natural language verse references
+- **Flexible Formats**: Supports chapter-only, single verse, and verse ranges
+- **Book Name Handling**: Correctly identifies books with numbers (e.g., "1 John")
+- **Chapter Detection**: Automatically finds all verses in a chapter when no verse specified
+- **Error Handling**: Provides helpful error messages for invalid formats
 
 ### Theme System
 - **CSS Classes**: `.light-theme` class toggles projection colors
@@ -294,16 +394,34 @@ For technical issues or questions:
 4. Check browser console (F12) for error messages
 5. Ensure browser supports required features
 
+## Recent Updates
+
+### Version 2.0 - Smart Verse Search (Current)
+- ✅ **Smart Search Bar**: Natural language verse references
+- ✅ **Full Chapter Loading**: Type "John 3" to load entire chapters
+- ✅ **Infinite Navigation**: Navigate beyond loaded verses automatically
+- ✅ **Dynamic Verse Loading**: Adjacent verses load on-demand
+- ✅ **Flexible Input**: Supports multiple verse reference formats
+- ✅ **Improved UX**: Simpler, faster verse lookup
+
+### Version 1.0 - Initial Release
+- Complete KJV Bible with 31,104 verses
+- 685 SDAH hymns with full lyrics
+- Dual-theme projection (Dark/Light)
+- Offline functionality
+- Keyboard shortcuts
+
 ## Future Enhancements
 
 Possible future additions:
 - Multiple Bible versions (NIV, ESV, NKJV)
-- Search functionality for verses and hymns
+- Advanced search functionality (search by keywords)
 - Custom song databases
 - Export/print functionality
 - Remote control via mobile device
 - Presentation history
 - Custom backgrounds and fonts
+- Bookmarks and favorites
 
 ## License
 
