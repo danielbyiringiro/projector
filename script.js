@@ -1,13 +1,3 @@
-// Bible Books Data
-const BIBLE_BOOKS = {
-  "Old Testament": [
-    "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
-  ],
-  "New Testament": [
-    "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John", "2 John", "3 John", "Jude", "Revelation",
-  ],
-};
-
 // Data stores
 let BIBLE_DATA = {};
 let SONG_DATA = {};
@@ -27,7 +17,6 @@ let projectionTheme = 'dark'; // 'dark' or 'light'
 const elements = {
   tabs: document.querySelectorAll(".tab-btn"),
   tabContents: document.querySelectorAll(".tab-content"),
-  bookSelect: document.getElementById("bookName"),
   loadSongBtn: document.getElementById("loadSong"),
   loadVerseBtn: document.getElementById("loadVerse"),
   previewSection: document.getElementById("previewSection"),
@@ -46,11 +35,7 @@ const elements = {
   lightThemeBtn: document.getElementById("lightThemeBtn"),
   inputs: {
     song: document.getElementById("songNumber"),
-    version: document.getElementById("bibleVersion"),
-    book: document.getElementById("bookName"),
-    chapter: document.getElementById("chapter"),
-    start: document.getElementById("startVerse"),
-    end: document.getElementById("endVerse"),
+    verseSearch: document.getElementById("verseSearch"),
   },
 };
 
@@ -115,11 +100,37 @@ function parseJsonHymnal(hymnalArray) {
   return songs;
 }
 
+// Parse verse reference like "John 3:16" or "John 3:16-18"
+function parseVerseReference(reference) {
+  // Trim whitespace
+  reference = reference.trim();
+
+  // Match pattern: Book Chapter:Verse or Book Chapter:Verse-Verse
+  // Examples: "John 3:16", "1 John 3:16", "John 3:16-18"
+  const pattern = /^((?:\d\s)?[A-Za-z\s]+)\s+(\d+):(\d+)(?:-(\d+))?$/;
+  const match = reference.match(pattern);
+
+  if (!match) {
+    return null;
+  }
+
+  const book = match[1].trim();
+  const chapter = match[2];
+  const startVerse = parseInt(match[3], 10);
+  const endVerse = match[4] ? parseInt(match[4], 10) : startVerse;
+
+  return {
+    book,
+    chapter,
+    startVerse,
+    endVerse
+  };
+}
+
 
 // --- Initialization ---
 
 function init() {
-  populateBooks();
   setupEventListeners();
   loadLocalData();
   loadThemePreference();
@@ -134,20 +145,6 @@ function setCurrentYear() {
 }
 
 // --- UI Setup ---
-
-function populateBooks() {
-  for (const [testament, books] of Object.entries(BIBLE_BOOKS)) {
-    const group = document.createElement("optgroup");
-    group.label = testament;
-    books.forEach((book) => {
-      const option = document.createElement("option");
-      option.value = book;
-      option.textContent = book;
-      group.appendChild(option);
-    });
-    elements.bookSelect.appendChild(group);
-  }
-}
 
 function setupEventListeners() {
   elements.tabs.forEach((tab) => {
@@ -186,6 +183,13 @@ function setupEventListeners() {
   elements.inputs.song.addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
       loadSong();
+    }
+  });
+
+  // Enter key in verse search field
+  elements.inputs.verseSearch.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      loadVerse();
     }
   });
 }
@@ -236,14 +240,20 @@ function loadSong() {
 }
 
 async function loadVerse() {
-  const book = elements.inputs.book.value;
-  const chapter = elements.inputs.chapter.value;
-  const startVerse = parseInt(elements.inputs.start.value, 10);
-  const endVerse = parseInt(elements.inputs.end.value, 10) || startVerse;
+  const searchInput = elements.inputs.verseSearch.value;
 
-  if (!book || !chapter || !startVerse) {
-    return alert("Please fill in Book, Chapter, and Start Verse.");
+  if (!searchInput) {
+    return alert("Please enter a verse reference (e.g., John 3:16)");
   }
+
+  // Parse the verse reference
+  const parsed = parseVerseReference(searchInput);
+
+  if (!parsed) {
+    return alert("Invalid verse format. Please use format like 'John 3:16' or 'John 3:16-18'");
+  }
+
+  const { book, chapter, startVerse, endVerse } = parsed;
 
   elements.loadVerseBtn.textContent = "Loading...";
   elements.loadVerseBtn.disabled = true;
