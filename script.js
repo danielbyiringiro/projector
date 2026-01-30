@@ -61,15 +61,15 @@ async function loadLocalData() {
     elements.statusBadge.textContent = "Loading data...";
     const [bibleRes, songRes] = await Promise.all([
       fetch("verses-1769.json"),
-      fetch("SDAH.sps"),
+      fetch("sdah.json"),
     ]);
 
     if (!bibleRes.ok) throw new Error("Failed to load Bible data.");
     BIBLE_DATA = await bibleRes.json();
 
     if (!songRes.ok) throw new Error("Failed to load Song data.");
-    const spsText = await songRes.text();
-    SONG_DATA = parseSps(spsText);
+    const songJson = await songRes.json();
+    SONG_DATA = parseJsonHymnal(songJson);
 
     elements.statusBadge.textContent = "Ready";
     elements.statusBadge.style.color = "#4ade80"; // Green color for ready
@@ -77,45 +77,41 @@ async function loadLocalData() {
     console.error("Data loading error:", error);
     elements.statusBadge.textContent = "Error";
     elements.statusBadge.style.color = "#f87171"; // Red color for error
-    alert("Failed to load local data files. Please ensure verses-1769.json and SDAH.sps are in the same directory.");
+    alert("Failed to load local data files. Please ensure verses-1769.json and sdah.json are in the same directory.");
   }
 }
 
-function parseSps(text) {
+function parseJsonHymnal(hymnalArray) {
   const songs = {};
-  const lines = text.split("\n");
 
-  for (const line of lines) {
-    if (!line.startsWith("##") && line.includes("#$#")) {
-      const parts = line.split("#$#");
-      const number = parseInt(parts[0], 10);
-      if (isNaN(number)) continue;
+  for (const hymn of hymnalArray) {
+    const number = hymn.number;
+    const title = hymn.title || "Unknown Title";
+    const stanzas = [];
 
-      const title = parts[1] || "Unknown Title";
-      let lyrics = parts[6] || "";
+    // Convert the lyrics array to stanzas
+    for (const lyric of hymn.lyrics) {
+      const stanzaType = lyric.type; // "verse" or "refrain"
+      const stanzaIndex = lyric.index;
+      const stanzaText = lyric.lines.join("\n");
 
-      // Parse into stanzas for navigation
-      const stanzas = [];
-      const stanzaParts = lyrics.split("@$");
-
-      for (const stanzaPart of stanzaParts) {
-        if (stanzaPart.trim()) {
-          const stanzaLines = stanzaPart.split("@%");
-          const stanzaTitle = stanzaLines[0].trim();
-          const stanzaText = stanzaLines.slice(1).join("\n").trim();
-
-          if (stanzaText) {
-            stanzas.push({
-              title: stanzaTitle,
-              text: stanzaText
-            });
-          }
-        }
+      // Create a title for the stanza
+      let stanzaTitle;
+      if (stanzaType === "refrain") {
+        stanzaTitle = "Refrain";
+      } else {
+        stanzaTitle = `Verse ${stanzaIndex}`;
       }
 
-      songs[number] = { title, stanzas };
+      stanzas.push({
+        title: stanzaTitle,
+        text: stanzaText
+      });
     }
+
+    songs[number] = { title, stanzas };
   }
+
   return songs;
 }
 
@@ -127,6 +123,14 @@ function init() {
   setupEventListeners();
   loadLocalData();
   loadThemePreference();
+  setCurrentYear();
+}
+
+function setCurrentYear() {
+  const yearElement = document.getElementById('currentYear');
+  if (yearElement) {
+    yearElement.textContent = new Date().getFullYear();
+  }
 }
 
 // --- UI Setup ---

@@ -47,7 +47,7 @@ That's it! No installation, no internet required.
 ### Prerequisites
 - A modern web browser (Chrome, Firefox, Safari, Edge)
 - **No internet connection required** - fully offline capable
-- The included data files (SDAH.sps and verses-1769.json)
+- The included data files (sdah.json and verses-1769.json)
 
 ### Installation
 1. Download or clone all files to a folder
@@ -56,7 +56,7 @@ That's it! No installation, no internet required.
    - `script.js` - Application logic
    - `styles.css` - Styling and themes
    - `verses-1769.json` - Complete KJV Bible (31,104 verses)
-   - `SDAH.sps` - Hymnal database (685 hymns)
+   - `sdah.json` - Hymnal database (685 hymns)
    - `README.md` - This documentation
 
 ### Usage
@@ -125,7 +125,7 @@ GNASSprojector/
 ├── script.js           # Main JavaScript application logic
 ├── styles.css          # Styling and theme definitions
 ├── verses-1769.json    # Complete KJV Bible (31,104 verses, ~2-3MB)
-├── SDAH.sps           # Hymn database file (685 hymns)
+├── sdah.json          # Hymnal database file (685 hymns)
 └── README.md          # This documentation file
 ```
 
@@ -159,12 +159,12 @@ Matthew, Mark, Luke, John, Acts, Romans, 1 Corinthians, 2 Corinthians, Galatians
 
 ## Hymn Database
 
-The SDAH.sps file contains **685 hymns** from the Seventh-day Adventist Hymnal, including:
+The sdah.json file contains **685 hymns** from the Seventh-day Adventist Hymnal, including:
 - Complete lyrics for all verses and refrains
 - Proper verse numbering and labels (Verse 1, Verse 2, Refrain, etc.)
 - Automatic stanza separation for navigation
 - Song titles and metadata
-- Custom .sps format with #$# delimiters
+- JSON format with structured hymn data
 
 ### Navigation Features
 - Each stanza is a separate navigable item
@@ -183,13 +183,13 @@ The SDAH.sps file contains **685 hymns** from the Seventh-day Adventist Hymnal, 
 
 ### Data Not Loading
 **Status shows "Loading data..." or "Error":**
-- Ensure `verses-1769.json` and `SDAH.sps` are in the same directory as `index.html`
+- Ensure `verses-1769.json` and `sdah.json` are in the same directory as `index.html`
 - Check browser console (F12) for error messages
 - Verify files are not corrupted (verses-1769.json should be ~2-3MB)
 - Try refreshing the page (Ctrl+R or Cmd+R)
 
 ### Songs Not Loading
-- Ensure the SDAH.sps file is in the same directory as index.html
+- Ensure the sdah.json file is in the same directory as index.html
 - Check that the song number exists (valid range: 1-685)
 - Wait for "Ready" status indicator before loading songs
 - Verify the browser can access local files
@@ -236,9 +236,10 @@ The SDAH.sps file contains **685 hymns** from the Seventh-day Adventist Hymnal, 
   - Format: `{"Book Chapter:Verse": "verse text"}`
   - Size: ~2-3MB uncompressed
   - Encoding: UTF-8
-- **SDAH.sps**: Custom format with #$# delimiters for song data
-  - Format: `number#$#title#$#...#$#lyrics`
-  - Lyrics use @$ for stanza breaks, @% for line breaks
+- **sdah.json**: JSON array with structured hymn data
+  - Format: Array of hymn objects with number, title, and lyrics
+  - Each lyric has type (verse/refrain), index, and lines array
+  - Size: ~1-2MB uncompressed
 - **localStorage**: Browser storage for theme preference
   - Key: `projectionTheme`
   - Values: `'dark'` or `'light'`
@@ -246,7 +247,7 @@ The SDAH.sps file contains **685 hymns** from the Seventh-day Adventist Hymnal, 
 ### Data Loading
 1. **Startup**: Both Bible and hymn data load in parallel using `Promise.all()`
 2. **Bible**: Entire JSON parsed into memory (~2-3MB)
-3. **Hymns**: SPS file parsed into structured objects with stanza separation
+3. **Hymns**: JSON file parsed into structured objects with stanza separation
 4. **Status**: Real-time loading indicator in UI
 
 ### Navigation System
