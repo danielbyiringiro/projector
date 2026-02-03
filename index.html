@@ -44,41 +44,13 @@
                 </div>
 
                 <div class="tab-content" id="verseSection">
-                    <div class="form-row">
-                        <div class="form-group col-span-full">
-                            <label for="bibleVersion">Version</label>
-                            <select id="bibleVersion">
-                                <option value="kjv">King James Version (KJV)</option>
-                                <option value="web">World English Bible (WEB)</option>
-                            </select>
+                    <div class="form-group">
+                        <label for="verseSearch">Bible Verse</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="verseSearch" placeholder="e.g., John 3, John 3:16, or John 3:16-18">
+                            <span class="input-hint">Enter book, chapter, and optional verse(s)</span>
                         </div>
                     </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group grow">
-                            <label for="bookName">Book</label>
-                            <select id="bookName">
-                                <option value="" disabled selected>Select Book</option>
-                                <!-- Books will be populated by JS -->
-                            </select>
-                        </div>
-                        <div class="form-group w-24">
-                            <label for="chapter">Chapter</label>
-                            <input type="number" id="chapter" min="1" placeholder="1">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group grow">
-                            <label for="startVerse">Start Verse</label>
-                            <input type="number" id="startVerse" min="1" placeholder="1">
-                        </div>
-                        <div class="form-group grow">
-                            <label for="endVerse">End Verse</label>
-                            <input type="number" id="endVerse" min="1" placeholder="Optional">
-                        </div>
-                    </div>
-
                     <button id="loadVerse" class="btn btn-primary">Load Passage</button>
                 </div>
             </div>
@@ -125,7 +97,7 @@
         </main>
 
         <footer class="app-footer">
-            <p>&copy; 2025 Scripture Projector. Designed for seamless worship.</p>
+            <p>&copy; <span id="currentYear"></span> Scripture Projector. Designed for seamless worship.</p>
         </footer>
     </div>
 
